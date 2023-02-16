@@ -1,5 +1,9 @@
 import random
+import time
 from collections import deque
+
+
+improved = False
 
 
 def generateNonCollapsedBoard():
@@ -11,18 +15,52 @@ def generateNonCollapsedBoard():
 
 
 def getCell(cells):
+    if improved:
+        return getCellImproved(cells)
+    else:
+        return getCellNormal(cells)
+
+
+def getCellNormal(cells):
     """
     Retrieve a random cell that is not collapsed.
     """
     x, y = -1, -1
     cell = [0]
     while len(cell) == 1:
-        # For a more difficult board generation, instead of picking random points every time, find out what values of
-        # x and y would generate the most information. This would then lead to fewer values being known overall.
         x = random.randint(0, 8)
         y = random.randint(0, 8)
         cell = cells[x + 9*y].copy()
     return cell, (x, y)
+
+
+def getCellImproved(cells):
+    """
+    Retrieve a random cell that is not collapsed out of the most un-collapsed cells
+    """
+    # highest is an array of tuples, where each tuple contains (x, y, value)
+    highest = [(-1, -1, 0)]
+    for x in range(0, 9):
+        for y in range(0, 9):
+            value = evaluate(x, y, cells)
+            if value > highest[0][2]:
+                highest = [(x, y, value)]
+            elif value == highest[0][2]:
+                highest.append((x, y, value))
+
+    # Make sure to still pick a random cell out of all equal highest value cells
+    index = random.randint(0, len(highest)-1)
+    x, y, value = highest[index]
+    cell = cells[x + 9 * y].copy()
+    return cell, (x, y)
+
+
+def evaluate(x, y, cells):
+    """
+    Evaluate the informational value of the cell at position (x,y).
+    """
+    # The more possible states for this cell, the higher its informational value is.
+    return len(cells[x + 9 * y])
 
 
 def waveCollapse(cells):
@@ -146,5 +184,26 @@ class Board:
 
 
 board = Board()
-board.setup()
-drawBoard(board.cells)
+normal = []
+better = []
+iterations = 250
+timer_start = time.perf_counter()
+for i in range(0, iterations):
+    board.setup()
+    normal.append(sum([1 for i in board.cells if i]))
+    # drawBoard(board.cells)
+timer_end = time.perf_counter()
+n_timer = timer_end - timer_start
+
+improved = True
+timer_start = time.perf_counter()
+for i in range(0, iterations):
+    board.setup()
+    better.append(sum([1 for i in board.cells if i]))
+    # drawBoard(board.cells)
+timer_end = time.perf_counter()
+b_timer = timer_end - timer_start
+
+print('Performance:')
+print('Normal: ' + str(sum(normal)/iterations) + ' (' + str(iterations) + ' runs, ' + str(n_timer) + ' s)')
+print('Better: ' + str(sum(better)/iterations) + ' (' + str(iterations) + ' runs, ' + str(b_timer) + ' s)')
