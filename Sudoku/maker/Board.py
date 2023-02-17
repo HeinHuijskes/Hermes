@@ -4,6 +4,8 @@ from collections import deque
 
 
 improved = False
+printCollapse = False
+printBoard = False
 
 
 def generateNonCollapsedBoard():
@@ -138,12 +140,33 @@ def drawCollapseBoard(cells):
     """
     Draw the not collapsed board states alongside the collapsed ones.
     """
-    pass
+    solid = '|-------|-------|-------|-------|-------|-------|-------|-------|-------|'
+    print(solid)
+    resultString = '|'
+    for index in range(0, len(cells), 9):
+        nine_cells = cells[index:index+9]
+        # Loop over three mini-rows per cel
+        for i in range(0, 3):
+            # Loop over the 9 cell columns
+            for j in range(0, 9):
+                cell = nine_cells[j]
+                resultString += ' '
+                # Loop over three mini-columns per cel
+                for k in range(0, 3):
+                    value = (k+i*3+1)
+                    if value in cell:
+                        resultString += str(value) + ' '
+                    else:
+                        resultString += '  '
+                resultString += '|'
+            print(resultString)
+            resultString = '|'
+        print(solid)
+    print()
 
 
 def drawBoard(cells):
     solid = '|---|---|---|---|---|---|---|---|---|'
-    # '|- -|- -|- -|- -|- -|- -|- -|- -|- -|'
     separator = '| - | - | - | - | - | - | - | - | - |'
     print(solid)
     resultString = '|'
@@ -179,7 +202,11 @@ class Board:
             (x, y) = waveCollapse(cells)
             collapsed = isCollapsed(cells)
             newBoard[x + 9 * y] = cells[x + 9 * y]
-            # drawBoard(newBoard)
+            if printBoard:
+                if printCollapse:
+                    drawCollapseBoard(cells)
+                else:
+                    drawBoard(newBoard)
         self.cells = newBoard
 
 
@@ -207,3 +234,8 @@ b_timer = timer_end - timer_start
 print('Performance:')
 print('Normal: ' + str(sum(normal)/iterations) + ' (' + str(iterations) + ' runs, ' + str(n_timer) + ' s)')
 print('Better: ' + str(sum(better)/iterations) + ' (' + str(iterations) + ' runs, ' + str(b_timer) + ' s)')
+
+printCollapse = True
+printBoard = True
+board.setup()
+drawBoard(board.cells)
